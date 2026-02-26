@@ -23,18 +23,22 @@
 
     <form id="attendanceForm" class="space-y-4">
 
-      <input type="text" id="idPeserta" placeholder="ID Peserta"
+      <!-- NIP -->
+      <input type="text" id="nip" placeholder="NIP"
         class="w-full border rounded-xl p-3" required>
 
-      <input type="text" id="namaLengkap" placeholder="Nama Lengkap"
+      <!-- NAMA -->
+      <input type="text" id="nama" placeholder="Nama"
         class="w-full border rounded-xl p-3" required>
 
+      <!-- AUTO READ -->
       <input type="text" id="subDivisi" placeholder="Sub Divisi"
         class="w-full border rounded-xl p-3">
 
       <input type="text" id="departemen" placeholder="Departemen"
         class="w-full border rounded-xl p-3">
 
+      <!-- PROGRAM -->
       <select id="jenisPelatihan"
         class="w-full border rounded-xl p-3" required>
         <option value="">Pilih Program</option>
@@ -42,9 +46,11 @@
         <option value="MULTISKILL">MULTISKILL</option>
       </select>
 
+      <!-- BATCH -->
       <input type="text" id="batchPTO" placeholder="Batch PTO"
         class="w-full border rounded-xl p-3" required>
 
+      <!-- KEHADIRAN -->
       <select id="kehadiran"
         class="w-full border rounded-xl p-3" required>
         <option value="">Pilih Kehadiran</option>
@@ -53,14 +59,17 @@
         <option>Tidak Hadir</option>
       </select>
 
+      <!-- MATERI -->
       <select id="namaMateri"
         class="w-full border rounded-xl p-3" required>
         <option value="">Memuat materi...</option>
       </select>
 
+      <!-- TANGGAL -->
       <input type="date" id="tanggal"
         class="w-full border rounded-xl p-3" required>
 
+      <!-- SIGNATURE -->
       <div>
         <label class="block mb-2 font-medium text-gray-600">Tanda Tangan</label>
         <canvas id="signaturePad"
@@ -98,7 +107,10 @@
 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxic1hh5ytuGhAUZGB3cnbvTdaJyXHHF71kEVK5lyRw5oHUoaKbZQkG-4ms9XQNyCI/exec";
 
-/* LOAD MATERI */
+/* =========================
+   LOAD MATERI
+========================= */
+
 function loadMateri() {
   fetch(WEB_APP_URL + "?action=getMateri")
     .then(res => res.json())
@@ -112,95 +124,74 @@ function loadMateri() {
 }
 loadMateri();
 
-// ============================
-// AUTO READ MASTER KARYAWAN
-// ============================
+/* =========================
+   AUTO READ MASTER KARYAWAN
+========================= */
 
-document.getElementById("idPeserta").addEventListener("blur", function () {
+document.getElementById("nip").addEventListener("blur", function () {
 
   const nip = this.value.trim();
   if (!nip) return;
 
-  fetch(WEB_APP_URL + "?action=getKaryawan&id=" + nip)
+  fetch(WEB_APP_URL + "?action=getKaryawan&nip=" + nip)
     .then(res => res.json())
     .then(data => {
 
       if (data.status === "success") {
         document.getElementById("subDivisi").value = data.subDivisi || "";
         document.getElementById("departemen").value = data.departemen || "";
-      }
-
-      if (data.status === "notfound") {
+      } else {
         document.getElementById("subDivisi").value = "";
         document.getElementById("departemen").value = "";
       }
 
     })
     .catch(err => console.log("Lookup error:", err));
-
 });
 
-/* SIGNATURE */
+/* =========================
+   SIGNATURE
+========================= */
+
 const canvas = document.getElementById("signaturePad");
 const ctx = canvas.getContext("2d");
 let drawing = false;
 
-function getPosition(event) {
-  const rect = canvas.getBoundingClientRect();
-  if (event.touches) {
-    return {
-      x: event.touches[0].clientX - rect.left,
-      y: event.touches[0].clientY - rect.top
-    };
-  } else {
-    return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top
-    };
-  }
-}
+canvas.addEventListener("mousedown", () => drawing = true);
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("mousemove", draw);
 
-function startDrawing(event) {
-  drawing = true;
-  ctx.beginPath();
-  const pos = getPosition(event);
-  ctx.moveTo(pos.x, pos.y);
-}
+canvas.addEventListener("touchstart", () => drawing = true);
+canvas.addEventListener("touchend", () => drawing = false);
+canvas.addEventListener("touchmove", draw);
 
-function draw(event) {
+function draw(e) {
   if (!drawing) return;
-  event.preventDefault();
-  const pos = getPosition(event);
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
   ctx.lineWidth = 2;
   ctx.lineCap = "round";
-  ctx.strokeStyle = "#000";
-  ctx.lineTo(pos.x, pos.y);
+  ctx.lineTo(x, y);
   ctx.stroke();
 }
-
-function stopDrawing() {
-  drawing = false;
-}
-
-canvas.addEventListener("mousedown", startDrawing);
-canvas.addEventListener("mousemove", draw);
-canvas.addEventListener("mouseup", stopDrawing);
-canvas.addEventListener("touchstart", startDrawing);
-canvas.addEventListener("touchmove", draw);
-canvas.addEventListener("touchend", stopDrawing);
 
 function clearSignature() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-/* SUBMIT */
+/* =========================
+   SUBMIT
+========================= */
+
 document.getElementById("attendanceForm").addEventListener("submit", function(e){
   e.preventDefault();
   document.getElementById("loading").classList.remove("hidden");
 
   const formData = new URLSearchParams();
-  formData.append("idPeserta", idPeserta.value);
-  formData.append("namaLengkap", namaLengkap.value);
+  formData.append("nip", nip.value);
+  formData.append("nama", nama.value);
   formData.append("subDivisi", subDivisi.value);
   formData.append("departemen", departemen.value);
   formData.append("jenisPelatihan", jenisPelatihan.value);
@@ -214,7 +205,7 @@ document.getElementById("attendanceForm").addEventListener("submit", function(e)
     .then(res => res.json())
     .then(() => {
       document.getElementById("loading").classList.add("hidden");
-      toast.classList.remove("hidden");
+      document.getElementById("toast").classList.remove("hidden");
       setTimeout(() => toast.classList.add("hidden"), 3000);
       attendanceForm.reset();
       clearSignature();

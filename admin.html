@@ -29,8 +29,12 @@
   <!-- TAMBAH MATERI -->
   <div class="bg-white rounded-xl shadow p-6 mb-6">
     <h2 class="font-semibold mb-4">Tambah Materi</h2>
-    <input id="materiBaru" type="text" placeholder="Nama Materi" class="border p-3 rounded-lg w-full mb-3">
-    <button onclick="tambahMateri()" class="bg-green-600 text-white px-4 py-2 rounded-lg">Tambah</button>
+    <input id="materiBaru" type="text" placeholder="Nama Materi"
+      class="border p-3 rounded-lg w-full mb-3">
+    <button onclick="tambahMateri()"
+      class="bg-green-600 text-white px-4 py-2 rounded-lg">
+      Tambah
+    </button>
   </div>
 
   <!-- DATA ABSENSI -->
@@ -42,8 +46,10 @@
         <thead class="bg-gray-200">
           <tr>
             <th class="p-2">Tanggal</th>
-            <th class="p-2">ID</th>
+            <th class="p-2">NIP</th>
             <th class="p-2">Nama</th>
+            <th class="p-2">Sub Divisi</th>
+            <th class="p-2">Departemen</th>
             <th class="p-2">Program</th>
             <th class="p-2">Batch</th>
             <th class="p-2">Materi</th>
@@ -62,7 +68,10 @@
 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxic1hh5ytuGhAUZGB3cnbvTdaJyXHHF71kEVK5lyRw5oHUoaKbZQkG-4ms9XQNyCI/exec";
 
-/* LOGIN */
+/* =========================
+   LOGIN
+========================= */
+
 function login() {
   if (adminId.value === "ADRLC" && adminPw.value === "Adrlc123") {
     loginPage.classList.add("hidden");
@@ -78,44 +87,62 @@ function logout() {
   loginPage.classList.remove("hidden");
 }
 
-/* LOAD DATA */
+/* =========================
+   LOAD DATA ABSENSI
+========================= */
+
 function loadData() {
+
   fetch(WEB_APP_URL + "?action=getAbsensi")
     .then(res => res.json())
     .then(data => {
 
       const table = document.getElementById("dataTable");
-      table.innerHTML = ""; // CLEAR TABLE DULU
+      table.innerHTML = "";
 
+      // Skip header (baris pertama)
       data.slice(1).forEach(row => {
 
         table.innerHTML += `
           <tr class="border-b">
             <td class="p-2">${row[9]}</td>   <!-- Tanggal -->
-            <td class="p-2">${row[1]}</td>   <!-- ID -->
+            <td class="p-2">${row[1]}</td>   <!-- NIP -->
             <td class="p-2">${row[2]}</td>   <!-- Nama -->
+            <td class="p-2">${row[3]}</td>   <!-- Sub Divisi -->
+            <td class="p-2">${row[4]}</td>   <!-- Departemen -->
             <td class="p-2">${row[5]}</td>   <!-- Jenis Pelatihan -->
             <td class="p-2">${row[6]}</td>   <!-- Batch PTO -->
-            <td class="p-2">${row[8]}</td>   <!-- Materi -->
+            <td class="p-2">${row[8]}</td>   <!-- Nama Materi -->
             <td class="p-2">${row[7]}</td>   <!-- Kehadiran -->
           </tr>
         `;
       });
+
+    })
+    .catch(err => {
+      console.log("Load error:", err);
+      alert("Gagal mengambil data");
     });
 }
 
-/* TAMBAH MATERI */
+/* =========================
+   TAMBAH MATERI
+========================= */
+
 function tambahMateri() {
+
   if (!materiBaru.value.trim()) {
     alert("Materi tidak boleh kosong");
     return;
   }
 
-  fetch(WEB_APP_URL + "?action=addMateri&materi=" + encodeURIComponent(materiBaru.value))
+  fetch(WEB_APP_URL + "?action=addMateri&materi=" +
+    encodeURIComponent(materiBaru.value))
     .then(() => {
       alert("Materi berhasil ditambahkan");
       materiBaru.value = "";
     });
+
 }
 
 </script>
