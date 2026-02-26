@@ -1,32 +1,39 @@
 <script>
 
+document.addEventListener("DOMContentLoaded", function () {
+
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzHDBoFZMjfG4DbfdKGJpXY0DKSmZUKtGJV_bbVMMmzB-Le-3HaFL79MgCM-sFvf0Kb/exec";
 
 /* =========================
    LOGIN
 ========================= */
 
-function login() {
+window.login = function () {
 
-  const id = document.getElementById("adminId").value;
-  const pw = document.getElementById("adminPw").value;
+  const idField = document.getElementById("adminId");
+  const pwField = document.getElementById("adminPw");
+
+  if (!idField || !pwField) return;
+
+  const id = idField.value;
+  const pw = pwField.value;
 
   if (id === "ADRLC" && pw === "Adrlc123") {
 
-    document.getElementById("loginPage").classList.add("hidden");
-    document.getElementById("dashboard").classList.remove("hidden");
+    document.getElementById("loginPage")?.classList.add("hidden");
+    document.getElementById("dashboard")?.classList.remove("hidden");
 
     loadData();
 
   } else {
     alert("Login salah");
   }
-}
+};
 
-function logout() {
-  document.getElementById("dashboard").classList.add("hidden");
-  document.getElementById("loginPage").classList.remove("hidden");
-}
+window.logout = function () {
+  document.getElementById("dashboard")?.classList.add("hidden");
+  document.getElementById("loginPage")?.classList.remove("hidden");
+};
 
 /* =========================
    LOAD DATA ABSENSI
@@ -39,6 +46,8 @@ function loadData() {
     .then(data => {
 
       const table = document.getElementById("dataTable");
+      if (!table) return;
+
       table.innerHTML = "";
 
       if (!data || data.length <= 1) {
@@ -48,19 +57,22 @@ function loadData() {
 
       data.slice(1).forEach(row => {
 
-        table.innerHTML += `
-          <tr class="border-b">
-            <td class="p-2">${row[9] || ""}</td>
-            <td class="p-2">${row[1] || ""}</td>
-            <td class="p-2">${row[2] || ""}</td>
-            <td class="p-2">${row[3] || ""}</td>
-            <td class="p-2">${row[4] || ""}</td>
-            <td class="p-2">${row[5] || ""}</td>
-            <td class="p-2">${row[6] || ""}</td>
-            <td class="p-2">${row[8] || ""}</td>
-            <td class="p-2">${row[7] || ""}</td>
-          </tr>
+        const tr = document.createElement("tr");
+        tr.className = "border-b";
+
+        tr.innerHTML = `
+          <td class="p-2">${row[9] || ""}</td>
+          <td class="p-2">${row[1] || ""}</td>
+          <td class="p-2">${row[2] || ""}</td>
+          <td class="p-2">${row[3] || ""}</td>
+          <td class="p-2">${row[4] || ""}</td>
+          <td class="p-2">${row[5] || ""}</td>
+          <td class="p-2">${row[6] || ""}</td>
+          <td class="p-2">${row[8] || ""}</td>
+          <td class="p-2">${row[7] || ""}</td>
         `;
+
+        table.appendChild(tr);
       });
 
     })
@@ -74,9 +86,11 @@ function loadData() {
    TAMBAH MATERI
 ========================= */
 
-function tambahMateri() {
+window.tambahMateri = function () {
 
   const materiInput = document.getElementById("materiBaru");
+  if (!materiInput) return;
+
   const materi = materiInput.value.trim();
 
   if (!materi) {
@@ -100,6 +114,7 @@ function tambahMateri() {
       console.log("Materi error:", err);
       alert("Terjadi kesalahan");
     });
-}
+};
 
+});
 </script>

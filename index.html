@@ -1,5 +1,7 @@
 <script>
 
+document.addEventListener("DOMContentLoaded", function () {
+
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzHDBoFZMjfG4DbfdKGJpXY0DKSmZUKtGJV_bbVMMmzB-Le-3HaFL79MgCM-sFvf0Kb/exec";
 
 /* =========================
@@ -11,123 +13,156 @@ function loadMateri() {
     .then(res => res.json())
     .then(data => {
       const select = document.getElementById("namaMateri");
+      if (!select) return;
+
       select.innerHTML = '<option value="">Pilih Materi</option>';
+
       data.forEach(materi => {
-        select.innerHTML += `<option>${materi}</option>`;
+        const option = document.createElement("option");
+        option.value = materi;
+        option.textContent = materi;
+        select.appendChild(option);
       });
-    });
+    })
+    .catch(err => console.log("Materi error:", err));
 }
+
 loadMateri();
 
 /* =========================
    AUTO READ MASTER KARYAWAN
 ========================= */
 
-document.getElementById("nip").addEventListener("blur", function () {
+const nipInput = document.getElementById("nip");
 
-  const nipValue = this.value.trim();
-  if (!nipValue) return;
+if (nipInput) {
+  nipInput.addEventListener("blur", function () {
 
-  fetch(WEB_APP_URL + "?action=getKaryawan&nip=" + encodeURIComponent(nipValue))
-    .then(res => res.json())
-    .then(data => {
+    const nipValue = this.value.trim();
+    if (!nipValue) return;
 
-      if (data.status === "success") {
-        document.getElementById("nama").value = data.nama || "";
-        document.getElementById("subDivisi").value = data.subDivisi || "";
-        document.getElementById("departemen").value = data.departemen || "";
-      } else {
-        document.getElementById("nama").value = "";
-        document.getElementById("subDivisi").value = "";
-        document.getElementById("departemen").value = "";
-      }
+    fetch(WEB_APP_URL + "?action=getKaryawan&nip=" + encodeURIComponent(nipValue))
+      .then(res => res.json())
+      .then(data => {
 
-    })
-    .catch(err => console.log("Lookup error:", err));
-});
+        const namaField = document.getElementById("nama");
+        const subDivisiField = document.getElementById("subDivisi");
+        const departemenField = document.getElementById("departemen");
+
+        if (!namaField || !subDivisiField || !departemenField) return;
+
+        if (data.status === "success") {
+          namaField.value = data.nama || "";
+          subDivisiField.value = data.subDivisi || "";
+          departemenField.value = data.departemen || "";
+        } else {
+          namaField.value = "";
+          subDivisiField.value = "";
+          departemenField.value = "";
+        }
+
+      })
+      .catch(err => console.log("Lookup error:", err));
+  });
+}
 
 /* =========================
    SIGNATURE
 ========================= */
 
 const canvas = document.getElementById("signaturePad");
-const ctx = canvas.getContext("2d");
-let drawing = false;
 
-canvas.addEventListener("mousedown", startDraw);
-canvas.addEventListener("mouseup", stopDraw);
-canvas.addEventListener("mousemove", draw);
+if (canvas) {
 
-canvas.addEventListener("touchstart", startDraw);
-canvas.addEventListener("touchend", stopDraw);
-canvas.addEventListener("touchmove", draw);
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
 
-function startDraw(e) {
-  drawing = true;
-  ctx.beginPath();
-}
+  canvas.addEventListener("mousedown", startDraw);
+  canvas.addEventListener("mouseup", stopDraw);
+  canvas.addEventListener("mousemove", draw);
 
-function stopDraw() {
-  drawing = false;
-}
+  canvas.addEventListener("touchstart", startDraw);
+  canvas.addEventListener("touchend", stopDraw);
+  canvas.addEventListener("touchmove", draw);
 
-function draw(e) {
-  if (!drawing) return;
-  e.preventDefault();
+  function startDraw(e) {
+    drawing = true;
+    ctx.beginPath();
+  }
 
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-  const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  function stopDraw() {
+    drawing = false;
+  }
 
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.lineTo(x, y);
-  ctx.stroke();
-}
+  function draw(e) {
+    if (!drawing) return;
 
-function clearSignature() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    e.preventDefault();
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
+  window.clearSignature = function () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
 }
 
 /* =========================
    SUBMIT
 ========================= */
 
-document.getElementById("attendanceForm").addEventListener("submit", function(e){
+const form = document.getElementById("attendanceForm");
 
-  e.preventDefault();
-  document.getElementById("loading").classList.remove("hidden");
+if (form) {
+  form.addEventListener("submit", function (e) {
 
-  const formData = new URLSearchParams();
+    e.preventDefault();
 
-  formData.append("nip", document.getElementById("nip").value);
-  formData.append("nama", document.getElementById("nama").value);
-  formData.append("subDivisi", document.getElementById("subDivisi").value);
-  formData.append("departemen", document.getElementById("departemen").value);
-  formData.append("jenisPelatihan", document.getElementById("jenisPelatihan").value);
-  formData.append("batchPTO", document.getElementById("batchPTO").value);
-  formData.append("kehadiran", document.getElementById("kehadiran").value);
-  formData.append("namaMateri", document.getElementById("namaMateri").value);
-  formData.append("tanggal", document.getElementById("tanggal").value);
-  formData.append("signature", canvas.toDataURL());
+    const loading = document.getElementById("loading");
+    if (loading) loading.classList.remove("hidden");
 
-  fetch(WEB_APP_URL, { method: "POST", body: formData })
+    const formData = new URLSearchParams();
+
+    formData.append("nip", document.getElementById("nip")?.value || "");
+    formData.append("nama", document.getElementById("nama")?.value || "");
+    formData.append("subDivisi", document.getElementById("subDivisi")?.value || "");
+    formData.append("departemen", document.getElementById("departemen")?.value || "");
+    formData.append("jenisPelatihan", document.getElementById("jenisPelatihan")?.value || "");
+    formData.append("batchPTO", document.getElementById("batchPTO")?.value || "");
+    formData.append("kehadiran", document.getElementById("kehadiran")?.value || "");
+    formData.append("namaMateri", document.getElementById("namaMateri")?.value || "");
+    formData.append("tanggal", document.getElementById("tanggal")?.value || "");
+
+    if (canvas) {
+      formData.append("signature", canvas.toDataURL());
+    }
+
+    fetch(WEB_APP_URL, {
+      method: "POST",
+      body: formData
+    })
     .then(res => res.json())
     .then(response => {
 
-      document.getElementById("loading").classList.add("hidden");
+      if (loading) loading.classList.add("hidden");
 
       if (response.status === "success") {
 
         const toast = document.getElementById("toast");
-        toast.classList.remove("hidden");
+        if (toast) {
+          toast.classList.remove("hidden");
+          setTimeout(() => toast.classList.add("hidden"), 3000);
+        }
 
-        setTimeout(() => {
-          toast.classList.add("hidden");
-        }, 3000);
-
-        document.getElementById("attendanceForm").reset();
-        clearSignature();
+        form.reset();
+        if (canvas) canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
 
       } else {
         alert("Gagal menyimpan: " + response.message);
@@ -135,11 +170,13 @@ document.getElementById("attendanceForm").addEventListener("submit", function(e)
 
     })
     .catch(err => {
-      document.getElementById("loading").classList.add("hidden");
+      if (loading) loading.classList.add("hidden");
       alert("Terjadi kesalahan koneksi.");
       console.log(err);
     });
 
-});
+  });
+}
 
+});
 </script>
