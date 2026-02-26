@@ -1,69 +1,3 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen">
-
-<!-- LOGIN -->
-<div id="loginPage" class="flex items-center justify-center min-h-screen">
-  <div class="bg-white p-8 rounded-xl shadow-xl w-80">
-    <h2 class="text-xl font-bold mb-6 text-center">Admin Login</h2>
-    <input id="adminId" type="text" placeholder="Admin ID" class="w-full border p-3 rounded-lg mb-3">
-    <input id="adminPw" type="password" placeholder="Password" class="w-full border p-3 rounded-lg mb-4">
-    <button onclick="login()" class="w-full bg-indigo-600 text-white py-2 rounded-lg">Login</button>
-  </div>
-</div>
-
-<!-- DASHBOARD -->
-<div id="dashboard" class="hidden p-6">
-
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">Dashboard Admin</h1>
-    <button onclick="logout()" class="text-red-600 underline">Logout</button>
-  </div>
-
-  <!-- TAMBAH MATERI -->
-  <div class="bg-white rounded-xl shadow p-6 mb-6">
-    <h2 class="font-semibold mb-4">Tambah Materi</h2>
-    <input id="materiBaru" type="text" placeholder="Nama Materi"
-      class="border p-3 rounded-lg w-full mb-3">
-    <button onclick="tambahMateri()"
-      class="bg-green-600 text-white px-4 py-2 rounded-lg">
-      Tambah
-    </button>
-  </div>
-
-  <!-- DATA ABSENSI -->
-  <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="font-semibold mb-4">Data Absensi</h2>
-
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="p-2">Tanggal</th>
-            <th class="p-2">NIP</th>
-            <th class="p-2">Nama</th>
-            <th class="p-2">Sub Divisi</th>
-            <th class="p-2">Departemen</th>
-            <th class="p-2">Program</th>
-            <th class="p-2">Batch</th>
-            <th class="p-2">Materi</th>
-            <th class="p-2">Status</th>
-          </tr>
-        </thead>
-        <tbody id="dataTable"></tbody>
-      </table>
-    </div>
-
-  </div>
-
-</div>
-
 <script>
 
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxic1hh5ytuGhAUZGB3cnbvTdaJyXHHF71kEVK5lyRw5oHUoaKbZQkG-4ms9XQNyCI/exec";
@@ -73,18 +7,25 @@ const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxic1hh5ytuGhAUZGB3
 ========================= */
 
 function login() {
-  if (adminId.value === "ADRLC" && adminPw.value === "Adrlc123") {
-    loginPage.classList.add("hidden");
-    dashboard.classList.remove("hidden");
+
+  const id = document.getElementById("adminId").value;
+  const pw = document.getElementById("adminPw").value;
+
+  if (id === "ADRLC" && pw === "Adrlc123") {
+
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+
     loadData();
+
   } else {
     alert("Login salah");
   }
 }
 
 function logout() {
-  dashboard.classList.add("hidden");
-  loginPage.classList.remove("hidden");
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("loginPage").classList.remove("hidden");
 }
 
 /* =========================
@@ -100,20 +41,24 @@ function loadData() {
       const table = document.getElementById("dataTable");
       table.innerHTML = "";
 
-      // Skip header (baris pertama)
+      if (!data || data.length <= 1) {
+        table.innerHTML = `<tr><td colspan="9" class="p-4 text-center">Belum ada data</td></tr>`;
+        return;
+      }
+
       data.slice(1).forEach(row => {
 
         table.innerHTML += `
           <tr class="border-b">
-            <td class="p-2">${row[9]}</td>   <!-- Tanggal -->
-            <td class="p-2">${row[1]}</td>   <!-- NIP -->
-            <td class="p-2">${row[2]}</td>   <!-- Nama -->
-            <td class="p-2">${row[3]}</td>   <!-- Sub Divisi -->
-            <td class="p-2">${row[4]}</td>   <!-- Departemen -->
-            <td class="p-2">${row[5]}</td>   <!-- Jenis Pelatihan -->
-            <td class="p-2">${row[6]}</td>   <!-- Batch PTO -->
-            <td class="p-2">${row[8]}</td>   <!-- Nama Materi -->
-            <td class="p-2">${row[7]}</td>   <!-- Kehadiran -->
+            <td class="p-2">${row[9] || ""}</td>
+            <td class="p-2">${row[1] || ""}</td>
+            <td class="p-2">${row[2] || ""}</td>
+            <td class="p-2">${row[3] || ""}</td>
+            <td class="p-2">${row[4] || ""}</td>
+            <td class="p-2">${row[5] || ""}</td>
+            <td class="p-2">${row[6] || ""}</td>
+            <td class="p-2">${row[8] || ""}</td>
+            <td class="p-2">${row[7] || ""}</td>
           </tr>
         `;
       });
@@ -121,7 +66,7 @@ function loadData() {
     })
     .catch(err => {
       console.log("Load error:", err);
-      alert("Gagal mengambil data");
+      alert("Gagal mengambil data dari server");
     });
 }
 
@@ -131,20 +76,30 @@ function loadData() {
 
 function tambahMateri() {
 
-  if (!materiBaru.value.trim()) {
+  const materiInput = document.getElementById("materiBaru");
+  const materi = materiInput.value.trim();
+
+  if (!materi) {
     alert("Materi tidak boleh kosong");
     return;
   }
 
-  fetch(WEB_APP_URL + "?action=addMateri&materi=" +
-    encodeURIComponent(materiBaru.value))
-    .then(() => {
-      alert("Materi berhasil ditambahkan");
-      materiBaru.value = "";
-    });
+  fetch(WEB_APP_URL + "?action=addMateri&materi=" + encodeURIComponent(materi))
+    .then(res => res.text())
+    .then(response => {
 
+      if (response === "OK") {
+        alert("Materi berhasil ditambahkan");
+        materiInput.value = "";
+      } else {
+        alert("Gagal menambahkan materi");
+      }
+
+    })
+    .catch(err => {
+      console.log("Materi error:", err);
+      alert("Terjadi kesalahan");
+    });
 }
 
 </script>
-</body>
-</html>
