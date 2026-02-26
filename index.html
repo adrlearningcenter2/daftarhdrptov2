@@ -112,6 +112,34 @@ function loadMateri() {
 }
 loadMateri();
 
+// ============================
+// AUTO READ MASTER KARYAWAN
+// ============================
+
+document.getElementById("idPeserta").addEventListener("blur", function () {
+
+  const nip = this.value.trim();
+  if (!nip) return;
+
+  fetch(WEB_APP_URL + "?action=getKaryawan&id=" + nip)
+    .then(res => res.json())
+    .then(data => {
+
+      if (data.status === "success") {
+        document.getElementById("subDivisi").value = data.subDivisi || "";
+        document.getElementById("departemen").value = data.departemen || "";
+      }
+
+      if (data.status === "notfound") {
+        document.getElementById("subDivisi").value = "";
+        document.getElementById("departemen").value = "";
+      }
+
+    })
+    .catch(err => console.log("Lookup error:", err));
+
+});
+
 /* SIGNATURE */
 const canvas = document.getElementById("signaturePad");
 const ctx = canvas.getContext("2d");
